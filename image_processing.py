@@ -57,10 +57,15 @@ def stitch_frames_to_video(frame_dir: str, output_dir: str, fps: int = 15, origi
     frame_paths = sorted(list(frame_dir.iterdir()),
                     key=lambda filename: int(filename.stem.split("_")[1]))
     height, width = cv2.imread(str(frame_paths[0])).shape[:2]
+    if original_dir:
+        width *= 2
     dimensions = (width, height)
     writer = cv2.VideoWriter(str(output_path), cv2.VideoWriter_fourcc(*"avc1"), fps, dimensions)
     for frame_path in tqdm(frame_paths):
         frame = cv2.imread(str(frame_path))
+        if original_dir:
+            original_frame = cv2.imread(str(Path(original_dir) / frame_path.name))
+            frame = np.concatenate((original_frame, frame), axis=1)
         writer.write(frame)
     writer.release()
     
@@ -74,13 +79,16 @@ def main():
     parser.add_argument("--input_dir", type=str, help="Path to the input frames to be stitched together (for STITCH)")
     parser.add_argument("--output_path", type=str, help="Filename to save output video as (for STITCH)")
     parser.add_argument("--fps", "-f", type=int, default=15, help="Target FPS of the output video")
-    parser.add_argument("--side_by_side", "-s", action="store_true", help="If set, show side-by-side input and output frames")
+    parser.add_argument("--original_dir", type=str, help="If set during stitching, will show original frames next to diffusioned ones")
     args = parser.parse_args()
 
     if args.mode == SPLIT:
         split_frames(args.input_path, args.output_dir, target_fps=args.fps)
     elif args.mode == STITCH:
-        stitch_frames_to_video(args.input_dir, args.output_dir, fps=args.fps)
+        stitch_frames_to_video(args.input_dir,
+                               args.output_dir,
+                               fps=args.fps,
+                               original_dir=args.original_dir)
     else:
         raise ValueError(f"Mode must be one of [{','.join(MODES)}]")
 
