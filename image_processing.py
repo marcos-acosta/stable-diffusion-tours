@@ -6,23 +6,25 @@ import argparse
 import cv2
 import numpy as np
 
-
 STITCH = "stitch"
 SPLIT = "split"
 MODES = [STITCH, SPLIT]
+SD_WIDTH = 512
+SD_HEIGHT = 512
 
 
-def center_crop(frame: np.ndarray):
+def match_sd_dimensions(frame: np.ndarray):
     shape = frame.shape
     height, width, _ = shape
     if height > width:
         height_start = (height - width) // 2
         height_end = height_start + width
-        return frame[height_start:height_end,:,:]
+        cropped = frame[height_start:height_end,:,:]
     else:
         width_start = (width - height) // 2
         width_end = width_start + height
-        return frame[:, width_start:width_end, :]
+        cropped = frame[:, width_start:width_end, :]
+    return cv2.resize(cropped, (SD_WIDTH, SD_HEIGHT))
 
 
 def split_frames(video_path: str, output_dir: str, target_fps: int = 15):
@@ -44,13 +46,14 @@ def split_frames(video_path: str, output_dir: str, target_fps: int = 15):
                 ret, frame = cap.read()
                 if not ret:
                     break
-                center_cropped_frame = center_crop(frame)
-                Image.fromarray(center_cropped_frame).save(str(output_dir / f"frame_{i}.png"))
+                match_sd_dimensionsped_frame = match_sd_dimensions(frame)
+                Image.fromarray(match_sd_dimensionsped_frame).save(str(output_dir / f"frame_{i}.png"))
                 progress_bar.update(1)
 
 
-def stitch_frames_to_video(frame_dir: str, output_path: str, fps=2.0):
+def stitch_frames_to_video(frame_dir: str, output_dir: str, fps: int = 15, original_dir: str = None):
     frame_dir = Path(frame_dir)
+    output_path = Path(output_dir) / f"{frame_dir.name}.mp4"
     frame_paths = sorted(list(frame_dir.iterdir()),
                     key=lambda filename: int(filename.stem.split("_")[1]))
     height, width = cv2.imread(str(frame_paths[0])).shape[:2]
@@ -67,16 +70,17 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("mode", type=str, help=f"Must be one of [{', '.join(MODES)}]; determines the action to run")
     parser.add_argument("--input_path", type=str, help="Path to the video to be split into frames (for SPLIT)")
-    parser.add_argument("--output_dir", type=str, help="Directory to write output frames to (for SPLIT)")
+    parser.add_argument("--output_dir", type=str, help="Directory to write result to")
     parser.add_argument("--input_dir", type=str, help="Path to the input frames to be stitched together (for STITCH)")
     parser.add_argument("--output_path", type=str, help="Filename to save output video as (for STITCH)")
     parser.add_argument("--fps", "-f", type=int, default=15, help="Target FPS of the output video")
+    parser.add_argument("--side_by_side", "-s", action="store_true", help="If set, show side-by-side input and output frames")
     args = parser.parse_args()
 
     if args.mode == SPLIT:
         split_frames(args.input_path, args.output_dir, target_fps=args.fps)
     elif args.mode == STITCH:
-        stitch_frames_to_video(args.input_dir, args.output_path, fps=args.fps)
+        stitch_frames_to_video(args.input_dir, args.output_dir, fps=args.fps)
     else:
         raise ValueError(f"Mode must be one of [{','.join(MODES)}]")
 

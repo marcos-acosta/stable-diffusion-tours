@@ -92,7 +92,7 @@ class Diffusioner():
         input_dir, output_dir = Path(input_dir), Path(output_dir)
         name = input_dir.name
         output_dir = output_dir / name
-        output_dir.mkdir(exist_ok=False, parents=True)
+        output_dir.mkdir(exist_ok=True, parents=True)
         sorted_filepaths = sorted(list(input_dir.iterdir()), 
                                   key=lambda filename: int(filename.stem.split("_")[1]))
         for input_image_path in tqdm(sorted_filepaths):
