@@ -31,14 +31,18 @@ class Diffusioner():
         self.weight = weight
 
     def diffusionify(self, image_arr: np.ndarray = None, image_path: str = None, output_dir: str = None):
-        if image_arr is None and not image_path:
-            raise Exception("Either image_arr or image_path must be defined")
+        if not ((image_arr is not None) ^ bool(image_path and output_dir)):
+            raise Exception("Either image_arr or both image_path and output_dir must be defined")
         if image_arr is not None:
             pil_input_image = Image.fromarray(image_arr)
             bytes_buffer = io.BytesIO()
             pil_input_image.save(bytes_buffer, format='PNG')
             image_string = base64.b64encode(bytes_buffer.getvalue()).decode('ascii')
         elif image_path:
+            output_dir = Path(output_dir)
+            output_path = output_dir / Path(image_path).name
+            if os.path.exists(output_path):
+                return
             with open(image_path, "rb") as f:
                 image_string = base64.b64encode(f.read()).decode('ascii')
 
@@ -80,13 +84,16 @@ class Diffusioner():
         output_image = Image.open(io.BytesIO(base64.b64decode(output_image_b64.split(",", 1)[0])))
 
         if output_dir:
-            output_dir = Path(output_dir)
-            output_dir.mkdir(exist_ok=True, parents=True)
-            output_image.save(str(output_dir / Path(image_path).name))
+            output_image.save(str(output_path))
         else:
             return np.array(output_image)
 
     def diffusionify_dir(self, input_dir: str, output_dir: str):
         input_dir, output_dir = Path(input_dir), Path(output_dir)
-        for input_image_path in tqdm(input_dir.iterdir(), total=len(os.listdir(input_dir))):
-            self.diffusionify(input_image_path, output_dir)
+        name = input_dir.name
+        output_dir = output_dir / name
+        output_dir.mkdir(exist_ok=False, parents=True)
+        sorted_filepaths = sorted(list(input_dir.iterdir()), 
+                                  key=lambda filename: int(filename.stem.split("_")[1]))
+        for input_image_path in tqdm(sorted_filepaths):
+            self.diffusionify(image_arr=None, image_path=input_image_path, output_dir=output_dir)

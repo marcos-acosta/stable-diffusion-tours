@@ -21,7 +21,7 @@ def run_realtime(diffusioner: Diffusioner, camera_id: int):
         frame_512 = cv2.resize(frame, (512, 512))
         concatenated_frames = np.concatenate((frame_512, diffusioned_frame_bgr), axis=1)
         cv2.imshow("Camera", concatenated_frames)
-        key = cv2.waitKey(50) & 0xFF
+        key = cv2.waitKey(100) & 0xFF
         if key == ord('q'):
             break
     cap.release()
