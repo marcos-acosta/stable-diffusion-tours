@@ -25,12 +25,16 @@ def center_crop(frame: np.ndarray):
         return frame[:, width_start:width_end, :]
 
 
-def save_frames(video_path: str, output_dir: str, frame_sample_rate: int = 15):
-    output_dir = Path(output_dir)
-    output_dir.mkdir(exist_ok=True)
+def split_frames(video_path: str, output_dir: str, target_fps: int = 15):
+    video_path = Path(video_path)
+    video_name = video_path.stem
+    output_dir = Path(output_dir) / video_name
+    output_dir.mkdir(parents=True, exist_ok=False)
     cap = cv2.VideoCapture(str(video_path))
+    video_fps = cap.get(cv2.CAP_PROP_FPS)
+    frame_sample_rate = int(video_fps / target_fps)
     i = -1
-    with tqdm(total=cap.get(cv2.CAP_PROP_FRAME_COUNT)) as progress_bar:
+    with tqdm(total=int(cap.get(cv2.CAP_PROP_FRAME_COUNT))) as progress_bar:
         while cap.isOpened():
             i += 1
             if i % frame_sample_rate != 0:
@@ -66,14 +70,13 @@ def main():
     parser.add_argument("--output_dir", type=str, help="Directory to write output frames to (for SPLIT)")
     parser.add_argument("--input_dir", type=str, help="Path to the input frames to be stitched together (for STITCH)")
     parser.add_argument("--output_path", type=str, help="Filename to save output video as (for STITCH)")
-    parser.add_argument("--frame_sample_rate", "-s", type=int, default=15, help="How many frames to skip before sampling (for SPLIT)")
-    parser.add_argument("--fps", "-f", type=int, default=12, help="FPS of the target video (for STITCH)")
+    parser.add_argument("--fps", "-f", type=int, default=15, help="Target FPS of the output video")
     args = parser.parse_args()
 
     if args.mode == SPLIT:
-        save_frames(args.input_path, args.output_dir, args.frame_sample_rate)
+        split_frames(args.input_path, args.output_dir, target_fps=args.fps)
     elif args.mode == STITCH:
-        stitch_frames_to_video(args.input_dir, args.output_path, args.fps)
+        stitch_frames_to_video(args.input_dir, args.output_path, fps=args.fps)
     else:
         raise ValueError(f"Mode must be one of [{','.join(MODES)}]")
 
