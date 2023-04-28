@@ -1,0 +1,1 @@
+python sd_tours $1 -c $2 -r --camera_id $3
