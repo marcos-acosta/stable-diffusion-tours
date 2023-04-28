@@ -5,6 +5,7 @@ from tqdm import tqdm
 import argparse
 import cv2
 import numpy as np
+import os
 
 STITCH = "stitch"
 SPLIT = "split"
@@ -74,21 +75,24 @@ def stitch_frames_to_video(frame_dir: str, output_dir: str, fps: int = 15, origi
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("mode", type=str, help=f"Must be one of [{', '.join(MODES)}]; determines the action to run")
-    parser.add_argument("--input_path", type=str, help="Path to the video to be split into frames (for SPLIT)")
-    parser.add_argument("--output_dir", type=str, help="Directory to write result to")
-    parser.add_argument("--input_dir", type=str, help="Path to the input frames to be stitched together (for STITCH)")
-    parser.add_argument("--output_path", type=str, help="Filename to save output video as (for STITCH)")
+    parser.add_argument("name", type=str, help=f"The filename (no extension) of your input video, which will also be used for saving intermediate results and outputs")
+    parser.add_argument("input_dir", type=str, help="Input directory")
+    parser.add_argument("output_dir", type=str, help="Output directory")
     parser.add_argument("--fps", "-f", type=int, default=15, help="Target FPS of the output video")
     parser.add_argument("--original_dir", type=str, help="If set during stitching, will show original frames next to diffusioned ones")
     args = parser.parse_args()
 
     if args.mode == SPLIT:
-        split_frames(args.input_path, args.output_dir, target_fps=args.fps)
+        input_dir = Path(args.input_dir)
+        video_filename = [filename for filename in input_dir.iterdir() if filename.stem == args.name][0]
+        split_frames(str(video_filename), args.output_dir, target_fps=args.fps)
     elif args.mode == STITCH:
-        stitch_frames_to_video(args.input_dir,
+        input_dir = Path(args.input_dir) / args.name
+        original_dir = None if not args.original_dir else Path(args.original_dir) / args.name
+        stitch_frames_to_video(input_dir,
                                args.output_dir,
                                fps=args.fps,
-                               original_dir=args.original_dir)
+                               original_dir=original_dir)
     else:
         raise ValueError(f"Mode must be one of [{','.join(MODES)}]")
 
