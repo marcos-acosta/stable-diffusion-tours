@@ -5,7 +5,6 @@ from tqdm import tqdm
 import argparse
 import cv2
 import numpy as np
-import os
 
 STITCH = "stitch"
 SPLIT = "split"

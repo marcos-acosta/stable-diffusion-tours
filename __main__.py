@@ -1,5 +1,6 @@
 from diffusionify import Diffusioner
 from config import load_config, get_correct_setting
+from pathlib import Path
 
 import argparse
 import realtime
@@ -35,8 +36,9 @@ parser.add_argument("txt2img_endpoint_id", type=str, help="Stable difussion UI A
 parser.add_argument('--config_path', type=str, default="configs.json", help="Path to a config JSON file")
 parser.add_argument("--config", "-c", type=str, help="Name of the config to load from --config_path")
 parser.add_argument("--prompt", type=str, help="Prompt to pass to the stable diffusion model")
-parser.add_argument("--input_dir", type=str, help="Path to a directory of images to diffusionify")
-parser.add_argument("--output_dir", type=str, help="Output directory where diffusionified images will be written to")
+parser.add_argument("--name", type=str, help="Name of the subdirectory under --input_dir containing input frames")
+parser.add_argument("--input_dir", type=str, help="Path to the input directory containing subdirectories of frames")
+parser.add_argument("--output_dir", type=str, help="Path to the output directory where a subdirectory will be created with the given --name")
 parser.add_argument("--preprocessor", type=str, default='canny', help=f"Which ControlNet preprocessor to use. Must be one of [{', '.join(PREPROCESSOR_NAMES.keys())}]")
 parser.add_argument("--model", type=str, default='canny', help=f"Which ControlNet preprocessor to use. Must be one of [{', '.join(MODEL_NAMES.keys())}]")
 parser.add_argument("--seed", "-s", type=int, default=-1, help="Seed to pass to the stable diffusion model")
@@ -70,6 +72,9 @@ if args.realtime:
         camera_id=args.camera_id
     )
 else:
-    if not args.input_dir or not args.output_dir:
-        raise Exception("If --realtime is not set, --input_dir and --output_dir must be set")
-    d.diffusionify_dir(args.input_dir, args.output_dir)
+    if not args.input_dir or not args.output_dir or not args.name:
+        raise Exception("If --realtime is not set, --name, --input_dir and --output_dir must be set")
+    input_dir = Path(args.input_dir) / args.name
+    output_dir = Path(args.output_dir) / args.name
+    output_dir.mkdir(parents=True, exist_ok=True)
+    d.diffusionify_dir(str(input_dir), str(output_dir))

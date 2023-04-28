@@ -90,8 +90,6 @@ class Diffusioner():
 
     def diffusionify_dir(self, input_dir: str, output_dir: str):
         input_dir, output_dir = Path(input_dir), Path(output_dir)
-        name = input_dir.name
-        output_dir = output_dir / name
         output_dir.mkdir(exist_ok=True, parents=True)
         sorted_filepaths = sorted(list(input_dir.iterdir()), 
                                   key=lambda filename: int(filename.stem.split("_")[1]))
