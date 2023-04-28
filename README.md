@@ -1,6 +1,6 @@
 # Stable Diffusion Tours
 
-[Video demo!](https://www.youtube.com/watch?v=lHTD8xI_m74)
+[Video demo!](https://www.youtube.com/watch?v=QsQevePhlbY)
 
 This repository contains code for running stable diffusion on videos (saved and real-time).
 

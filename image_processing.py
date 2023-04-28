@@ -65,6 +65,7 @@ def stitch_frames_to_video(frame_dir: str, output_dir: str, fps: int = 15, origi
         frame = cv2.imread(str(frame_path))
         if original_dir:
             original_frame = cv2.imread(str(Path(original_dir) / frame_path.name))
+            original_frame = cv2.cvtColor(original_frame, cv2.COLOR_BGR2RGB)
             frame = np.concatenate((original_frame, frame), axis=1)
         writer.write(frame)
     writer.release()
