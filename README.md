@@ -46,7 +46,7 @@ Then, the following scripts can be run:
 bash sd_tours/scripts/split.sh house_tour 10
 
 # parameters: [stable diffusion API endpoint id] [video name (stem)] [config name]
-bash sd_tours/scripts/diffusionify.sh 5bbeded4c4c23e44c5 house_tour lego
+bash sd_tours/scripts/diffusionify.sh 5bbeded4c4c23e44c5 house_tour minecraft
 
 # parameters: [video name (stem)] [target FPS]
 bash sd_tours/scripts/stitch.sh house_tour 10
@@ -58,5 +58,5 @@ To quickly run stable diffusion in realtime, you may use the shortcut script:
 
 ```
 # parameters: [stable diffusion API endpoint id] [config name] [camera id]
-bash sd_tours/scripts/realtime.sh 5bbeded4c4c23e44c5 lego 0
+bash sd_tours/scripts/realtime.sh 5bbeded4c4c23e44c5 minecraft 0
 ```
