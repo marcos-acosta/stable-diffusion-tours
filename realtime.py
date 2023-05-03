@@ -4,7 +4,7 @@ from image_processing import match_sd_dimensions
 import cv2
 import numpy as np
 
-def run_realtime(diffusioner: Diffusioner, camera_id: int):
+def run_realtime(diffusioner: Diffusioner, prompt: str, camera_id: int):
     cap = cv2.VideoCapture(camera_id)
     while cap.isOpened():
         ret, frame = cap.read()
@@ -13,7 +13,7 @@ def run_realtime(diffusioner: Diffusioner, camera_id: int):
         frame = match_sd_dimensions(frame)
         frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         try:
-            diffusioned_frame = diffusioner.diffusionify(image_arr=frame_rgb)
+            diffusioned_frame = diffusioner.diffusionify(prompt=prompt, image_arr=frame_rgb)
         except Exception as e:
             print(f"[ERROR]: {e}")
             return
@@ -25,5 +25,3 @@ def run_realtime(diffusioner: Diffusioner, camera_id: int):
             break
     cap.release()
     cv2.destroyAllWindows()
-
-# run_realtime(None, 0)

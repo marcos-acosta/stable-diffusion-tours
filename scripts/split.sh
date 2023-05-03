@@ -1,1 +1,1 @@
-python sd_tours/image_processing.py split $1 input_videos input_frames -f $2
+python sd_tours/image_processing.py split input_videos/$1 input_frames/$2 -f $3

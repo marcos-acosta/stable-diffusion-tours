@@ -27,31 +27,54 @@ Place an input video in `input_videos/` e.g. `house_tour.mov`. Then, create a JS
 
 ```
 # configs.json
-[
-  {
-    "name": "minecraft",
-    "args": {
-      # place args to diffusionify.Diffusioner() here
-      "prompt": "The interior of a Minecraft house",
-      "preprocessor": "depth_midas",
-      "model": "depth",
-      "seed": 42
-    }
+{
+  "minecraft": {
+    # Place args to Diffusioner() here
+    "preprocessor": "canny",
+    "model": "canny"
+  },
+  "lego": {
+    "preprocessor": "depth_midas",
+    "model": "depth"
   }
-]
+}
 ```
+
+Prompts are set on a by-frame basis to account for changes in the input video. They are configured in a JSON file as follows:
+
+```
+# prompts.json
+{
+  "house_tour": [
+    {
+      "prompt": "The window of a house rendered in Minecraft",
+      "until": 60
+    }, {
+      "prompt": "The door of a house rendered in Minecraft",
+      "until": 68
+    },
+    ...
+    {
+      "prompt": "The staircase of a house rendered in Minecraft",
+      "until": null
+    }
+  ]
+}
+```
+
+The use of `null` indicates "until the end of the video". Thus, a single prompt can be used for the entire video by simply setting the only prompt's `until` property to `null`.
 
 Then, the following scripts can be run:
 
 ```
-# parameters: [video name (stem)] [target FPS]
-bash sd_tours/scripts/split.sh house_tour 10
+# parameters: [input video filename] [input frame directory] [target FPS]
+bash sd_tours/scripts/split.sh greg.mov greg_10fps 10
 
-# parameters: [stable diffusion API endpoint id] [video name (stem)] [config name]
-bash sd_tours/scripts/diffusionify.sh 5bbeded4c4c23e44c5 house_tour minecraft
+# parameters: [stable diffusion API endpoint id] [input frame directory] [diffusioned frame directory] [prompts name] [config name]
+bash sd_tours/scripts/diffusionify.sh 741d7442ca2750cb1f greg_10fps greg_10fps_minecraft greg minecraft
 
-# parameters: [video name (stem)] [target FPS]
-bash sd_tours/scripts/stitch.sh house_tour 10
+# parameters: [diffusioned frame directory] [original frame directory] [target FPS]
+bash sd_tours/scripts/stitch.sh greg_10fps_minecraft greg_10fps 10
 ```
 
 ## Running in real-time
@@ -60,5 +83,5 @@ To quickly run stable diffusion in realtime, you may use the shortcut script:
 
 ```
 # parameters: [stable diffusion API endpoint id] [config name] [camera id]
-bash sd_tours/scripts/realtime.sh 5bbeded4c4c23e44c5 minecraft 0
+bash sd_tours/scripts/realtime.sh 741d7442ca2750cb1f minecraft "A scene rendered in Minecraft" 0
 ```

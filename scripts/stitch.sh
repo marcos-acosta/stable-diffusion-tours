@@ -1,1 +1,1 @@
-python sd_tours/image_processing.py stitch $1 output_frames output_videos -f $2 --original_dir input_frames
+python sd_tours/image_processing.py stitch output_frames/$1 output_videos/$1.mp4 --original input_frames/$2 -f $3

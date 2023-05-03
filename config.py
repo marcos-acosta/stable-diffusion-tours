@@ -1,14 +1,11 @@
 import argparse
 import json
 
-def load_config(config_path: str, config_name: str):
-    with open(config_path, "r") as f:
-        configs = json.loads(f.read())
-    matching_configs = [config for config in configs if config["name"] == config_name]
-    if len(matching_configs) == 0:
-        raise Exception(f"Could not find config `{config_name}` in {config_path}.")
-    else:
-        return matching_configs[0]
+
+def load_config(prompt_path: str, prompt_name: str):
+    with open(prompt_path, "r") as f:
+        prompts = json.loads(f.read())
+    return prompts[prompt_name]
     
 
 def get_correct_setting(args: argparse.Namespace, config: dict, key: str):

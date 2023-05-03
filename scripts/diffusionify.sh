@@ -1,1 +1,1 @@
-python sd_tours $1 --name $2 --input_dir input_frames/ --output_dir output_frames/ -c $3
+python sd_tours $1 --input_dir input_frames/$2 --output_dir output_frames/$3 -p $4 -c $5

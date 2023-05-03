@@ -29,9 +29,8 @@ def match_sd_dimensions(frame: np.ndarray):
 
 def split_frames(video_path: str, output_dir: str, target_fps: int = 15):
     video_path = Path(video_path)
-    video_name = video_path.stem
-    output_dir = Path(output_dir) / video_name
-    output_dir.mkdir(parents=True, exist_ok=False)
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
     cap = cv2.VideoCapture(str(video_path))
     video_fps = cap.get(cv2.CAP_PROP_FPS)
     frame_sample_rate = int(video_fps / target_fps)
@@ -46,14 +45,14 @@ def split_frames(video_path: str, output_dir: str, target_fps: int = 15):
                 ret, frame = cap.read()
                 if not ret:
                     break
-                match_sd_dimensionsped_frame = match_sd_dimensions(frame)
-                Image.fromarray(match_sd_dimensionsped_frame).save(str(output_dir / f"frame_{i}.png"))
+                frame = match_sd_dimensions(frame)
+                frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                Image.fromarray(frame).save(str(output_dir / f"frame_{i}.png"))
                 progress_bar.update(1)
 
 
-def stitch_frames_to_video(frame_dir: str, output_dir: str, fps: int = 15, original_dir: str = None):
+def stitch_frames_to_video(frame_dir: str, output_path: str, fps: int = 15, original_dir: str = None):
     frame_dir = Path(frame_dir)
-    output_path = Path(output_dir) / f"{frame_dir.name}.mp4"
     frame_paths = sorted(list(frame_dir.iterdir()),
                     key=lambda filename: int(filename.stem.split("_")[1]))
     height, width = cv2.imread(str(frame_paths[0])).shape[:2]
@@ -65,7 +64,6 @@ def stitch_frames_to_video(frame_dir: str, output_dir: str, fps: int = 15, origi
         frame = cv2.imread(str(frame_path))
         if original_dir:
             original_frame = cv2.imread(str(Path(original_dir) / frame_path.name))
-            original_frame = cv2.cvtColor(original_frame, cv2.COLOR_BGR2RGB)
             frame = np.concatenate((original_frame, frame), axis=1)
         writer.write(frame)
     writer.release()
@@ -75,24 +73,19 @@ def stitch_frames_to_video(frame_dir: str, output_dir: str, fps: int = 15, origi
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("mode", type=str, help=f"Must be one of [{', '.join(MODES)}]; determines the action to run")
-    parser.add_argument("name", type=str, help=f"The filename (no extension) of your input video, which will also be used for saving intermediate results and outputs")
-    parser.add_argument("input_dir", type=str, help="Input directory")
-    parser.add_argument("output_dir", type=str, help="Output directory")
+    parser.add_argument("input", type=str, help="Input directory / path")
+    parser.add_argument("output", type=str, help="Output directory / path")
     parser.add_argument("--fps", "-f", type=int, default=15, help="Target FPS of the output video")
-    parser.add_argument("--original_dir", type=str, help="If set during stitching, will show original frames next to diffusioned ones")
+    parser.add_argument("--original", type=str, help="If set during stitching, will show original frames next to diffusioned ones")
     args = parser.parse_args()
 
     if args.mode == SPLIT:
-        input_dir = Path(args.input_dir)
-        video_filename = [filename for filename in input_dir.iterdir() if filename.stem == args.name][0]
-        split_frames(str(video_filename), args.output_dir, target_fps=args.fps)
+        split_frames(args.input, args.output, target_fps=args.fps)
     elif args.mode == STITCH:
-        input_dir = Path(args.input_dir) / args.name
-        original_dir = None if not args.original_dir else Path(args.original_dir) / args.name
-        stitch_frames_to_video(input_dir,
-                               args.output_dir,
+        stitch_frames_to_video(args.input,
+                               args.output,
                                fps=args.fps,
-                               original_dir=original_dir)
+                               original_dir=args.original)
     else:
         raise ValueError(f"Mode must be one of [{','.join(MODES)}]")
 

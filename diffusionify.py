@@ -1,6 +1,7 @@
 from pathlib import Path
 from PIL import Image
 from tqdm import tqdm
+from typing import List, Dict
 
 import base64
 import io
@@ -12,7 +13,6 @@ import requests
 class Diffusioner():
     def __init__(self,
                  txt2img_endpoint,
-                 prompt,
                  preprocessor_name,
                  model_name,
                  seed=-1,
@@ -21,7 +21,6 @@ class Diffusioner():
                  batch_size=1,
                  weight=1.0):
         self.txt2img_endpoint = txt2img_endpoint
-        self.prompt = prompt
         self.preprocessor_name = preprocessor_name
         self.model_name = model_name
         self.seed = seed
@@ -30,7 +29,7 @@ class Diffusioner():
         self.batch_size = batch_size
         self.weight = weight
 
-    def diffusionify(self, image_arr: np.ndarray = None, image_path: str = None, output_dir: str = None):
+    def diffusionify(self, prompt:str, image_arr: np.ndarray = None, image_path: str = None, output_dir: str = None):
         if not ((image_arr is not None) ^ bool(image_path and output_dir)):
             raise Exception("Either image_arr or both image_path and output_dir must be defined")
         if image_arr is not None:
@@ -55,7 +54,7 @@ class Diffusioner():
         }
 
         params = {
-            "prompt": self.prompt,
+            "prompt": prompt,
             "seed": self.seed,
             "steps": self.n_steps,
             "sampler_name": self.sampler_name,
@@ -88,10 +87,18 @@ class Diffusioner():
         else:
             return np.array(output_image)
 
-    def diffusionify_dir(self, input_dir: str, output_dir: str):
+    def diffusionify_dir(self, prompts: List[Dict], input_dir: str, output_dir: str):
+        prompts = prompts.copy()
         input_dir, output_dir = Path(input_dir), Path(output_dir)
         output_dir.mkdir(exist_ok=True, parents=True)
         sorted_filepaths = sorted(list(input_dir.iterdir()), 
                                   key=lambda filename: int(filename.stem.split("_")[1]))
         for input_image_path in tqdm(sorted_filepaths):
-            self.diffusionify(image_arr=None, image_path=input_image_path, output_dir=output_dir)
+            frame_number = int(str(input_image_path.stem).split('_')[-1])
+            if prompts[0]["until"] and frame_number > prompts[0]["until"]:
+                prompts.pop(0)
+            prompt = prompts[0]["prompt"]
+            self.diffusionify(prompt=prompt,
+                              image_arr=None,
+                              image_path=input_image_path,
+                              output_dir=output_dir)

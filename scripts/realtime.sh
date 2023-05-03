@@ -1,1 +1,1 @@
-python sd_tours $1 -c $2 -r --camera_id $3
+python sd_tours $1 --config=$2 --prompt="$3" --camera_id=$4 -r
