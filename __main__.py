@@ -51,7 +51,7 @@ parser.add_argument("--camera_id", type=int, default=0, help="The camera index (
 args = parser.parse_args()
 
 if args.config:
-    saved_config = load_config(args.config_path, args.config)['args']
+    saved_config = load_config(args.config_path, args.config)
 
 if args.prompt_name:
     prompts = load_config(args.prompts_path, args.prompt_name)
